@@ -21,6 +21,7 @@ export const BatchSelector: React.FC<BatchSelectorProps> = ({
           return (
             <button
               key={size}
+              type="button"
               onClick={() => !disabled && onSelectSize(size)}
               disabled={disabled}
               className={`rounded-lg px-4 py-1.5 text-[11px] font-extrabold transition-all ${

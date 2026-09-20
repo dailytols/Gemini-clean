@@ -50,23 +50,23 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFilesSelected, disable
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={triggerFileInput}
       className={`group relative flex flex-col items-center justify-center rounded-[24px] border-2 border-dashed p-8 md:p-12 text-center transition-all duration-300 shadow-xl ${
         disabled
           ? 'opacity-40 cursor-not-allowed border-slate-200 bg-slate-50 shadow-none'
           : isDragOver
-          ? 'border-violet-500 bg-violet-50/50 cursor-copy scale-[1.01] shadow-violet-100/80'
-          : 'border-slate-200 bg-white hover:bg-slate-50/40 hover:border-violet-300 hover:shadow-violet-100/40 cursor-pointer'
+          ? 'border-violet-500 bg-violet-50/50 scale-[1.01] shadow-violet-100/80'
+          : 'border-slate-200 bg-white hover:bg-slate-50/40 hover:border-violet-300 hover:shadow-violet-100/40'
       }`}
     >
       <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        className="hidden"
+        className={`absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer ${disabled ? 'pointer-events-none' : ''}`}
         multiple
-        accept="image/png, image/jpeg, image/jpg, image/webp"
+        accept="image/png,image/jpeg,image/jpg,image/webp"
         disabled={disabled}
+        title=""
       />
 
       <div className="absolute inset-2 rounded-[20px] border border-slate-100/50 pointer-events-none group-hover:border-violet-100/50 transition-colors" />
@@ -87,16 +87,12 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onFilesSelected, disable
         or browse files
       </p>
 
-      <div className="mt-4">
+      <div className="mt-4 relative z-10 pointer-events-none">
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerFileInput(e);
-          }}
           disabled={disabled}
-          className={`flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-md ${
-            disabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] shadow-violet-200'
+          className={`flex items-center gap-2 rounded-xl bg-violet-600 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-md ${
+            disabled ? 'opacity-50' : 'group-hover:scale-[1.02] shadow-violet-200'
           }`}
         >
           <FolderOpen className="h-4 w-4" />

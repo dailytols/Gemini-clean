@@ -17,7 +17,7 @@ import { useImageQueue } from './hooks/useImageQueue';
 import { useImageProcessor } from './hooks/useImageProcessor';
 
 import { QueueImage } from './types/image';
-import { loadOpenCV } from './services/inpainting';
+import { loadOpenCV } from './services/opencvLoader';
 import { safeRevokeUrl } from './utils/memory';
 
 import { Terminal, RefreshCw, Sparkles } from 'lucide-react';

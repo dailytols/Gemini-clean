@@ -1,58 +1,7 @@
 import { InpaintingMethod } from '../types/settings';
+import { loadOpenCV } from './opencvLoader';
+export { loadOpenCV };
 
-let isCvLoading = false;
-
-/**
- * Loads OpenCV.js dynamically into the document.
- */
-export function loadOpenCV(): Promise<any> {
-  return new Promise((resolve, reject) => {
-    if ((window as any).cv) {
-      resolve((window as any).cv);
-      return;
-    }
-
-    if (isCvLoading) {
-      const interval = setInterval(() => {
-        if ((window as any).cv) {
-          clearInterval(interval);
-          resolve((window as any).cv);
-        }
-      }, 100);
-      return;
-    }
-
-    isCvLoading = true;
-    const script = document.createElement('script');
-    script.setAttribute('id', 'opencv-js');
-    script.src = 'https://docs.opencv.org/4.5.5/opencv.js';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).cv && (window as any).cv.onRuntimeInitialized) {
-        (window as any).cv.onRuntimeInitialized = () => {
-          resolve((window as any).cv);
-        };
-      } else {
-        let count = 0;
-        const checkInit = setInterval(() => {
-          if ((window as any).cv && (window as any).cv.Mat) {
-            clearInterval(checkInit);
-            resolve((window as any).cv);
-          }
-          if (count++ > 50) {
-            clearInterval(checkInit);
-            reject(new Error('OpenCV failed to initialize in time.'));
-          }
-        }, 150);
-      }
-    };
-    script.onerror = () => {
-      isCvLoading = false;
-      reject(new Error('Failed to load OpenCV.js from CDN.'));
-    };
-    document.body.appendChild(script);
-  });
-}
 
 /**
  * Core Inpainting orchestrator.

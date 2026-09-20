@@ -227,12 +227,14 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
 
   // Touch events for mobile/tablet inpainting
   const onTouchStart = (e: ReactTouchEvent<HTMLCanvasElement>) => {
+    if (e.cancelable) e.preventDefault();
     if (e.touches && e.touches[0]) {
       handleStartDraw(e.touches[0].clientX, e.touches[0].clientY);
     }
   };
 
   const onTouchMove = (e: ReactTouchEvent<HTMLCanvasElement>) => {
+    if (e.cancelable) e.preventDefault();
     if (e.touches && e.touches[0]) {
       handleMoveDraw(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -268,6 +270,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
         <div className="flex items-center gap-2">
           <button
             id="close-editor-btn"
+            type="button"
             onClick={onClose}
             className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 hover:border-violet-350 hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-500 transition-colors cursor-pointer hover:text-slate-900"
           >
@@ -277,6 +280,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
 
           <button
             id="apply-mask-btn"
+            type="button"
             onClick={handleApply}
             className="flex items-center gap-1.5 rounded-xl bg-violet-600 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-violet-700 cursor-pointer shadow-md shadow-violet-200"
           >
@@ -297,6 +301,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
             <div className="grid grid-cols-2 gap-2">
               <button
                 id="brush-tool-btn"
+                type="button"
                 onClick={() => setTool('brush')}
                 className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   tool === 'brush'
@@ -310,6 +315,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
 
               <button
                 id="eraser-tool-btn"
+                type="button"
                 onClick={() => setTool('eraser')}
                 className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all cursor-pointer ${
                   tool === 'eraser'
@@ -348,6 +354,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
             <div className="grid grid-cols-3 gap-2">
               <button
                 id="undo-btn"
+                type="button"
                 disabled={undoStack.length <= 1}
                 onClick={handleUndo}
                 className="flex flex-col items-center justify-center rounded-xl bg-white border border-slate-200 py-2.5 text-[10px] font-bold text-slate-500 transition-colors hover:text-slate-900 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
@@ -359,6 +366,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
 
               <button
                 id="redo-btn"
+                type="button"
                 disabled={redoStack.length === 0}
                 onClick={handleRedo}
                 className="flex flex-col items-center justify-center rounded-xl bg-white border border-slate-200 py-2.5 text-[10px] font-bold text-slate-500 transition-colors hover:text-slate-900 hover:bg-slate-50 disabled:opacity-40 cursor-pointer"
@@ -370,6 +378,7 @@ export const MaskEditor: React.FC<MaskEditorProps> = ({ imageItem, onApply, onCl
 
               <button
                 id="reset-detection-btn"
+                type="button"
                 onClick={handleReset}
                 className="flex flex-col items-center justify-center rounded-xl bg-white border border-slate-200 py-2.5 text-[10px] font-bold text-slate-500 transition-colors hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 cursor-pointer"
                 title="Reset to automatic detection state"

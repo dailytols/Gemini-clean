@@ -39,6 +39,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ image, onCompare }) => {
         {image.cleanedUrl && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40 opacity-0 backdrop-blur-[2px] transition-all duration-200 group-hover:opacity-100">
             <button
+              type="button"
               onClick={() => onCompare(image)}
               className="flex items-center gap-1.5 rounded-xl bg-white hover:bg-violet-50 hover:text-violet-600 text-slate-900 px-4.5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-lg cursor-pointer hover:scale-[1.02]"
             >
@@ -86,6 +87,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ image, onCompare }) => {
         {/* Action button bar */}
         <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2.5">
           <button
+            type="button"
             onClick={() => onCompare(image)}
             className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-950 py-2 text-xs font-bold transition-all cursor-pointer"
           >
@@ -95,6 +97,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ image, onCompare }) => {
 
           {image.cleanedUrl && (
             <button
+              type="button"
               onClick={handleDownload}
               className="flex items-center justify-center gap-1 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 text-xs font-bold transition-all hover:scale-[1.02] shadow-md shadow-violet-150 cursor-pointer"
               aria-label="Download Cleaned Image"

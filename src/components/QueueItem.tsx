@@ -78,6 +78,7 @@ export const QueueItem: React.FC<QueueItemProps> = ({ item, onRemove, onFineTune
 
           {onFineTune && (item.status === 'QUEUED' || item.status === 'ERROR') && (
             <button
+              type="button"
               onClick={() => onFineTune(item)}
               className="text-slate-400 transition-colors hover:text-violet-600 cursor-pointer"
               title="Manual Mask Fine-Tune"
@@ -88,6 +89,7 @@ export const QueueItem: React.FC<QueueItemProps> = ({ item, onRemove, onFineTune
 
           <button
             id={`remove-btn-${item.id}`}
+            type="button"
             disabled={disabled || item.status === 'DONE'}
             onClick={() => onRemove(item.id)}
             className="text-slate-400 transition-colors hover:text-rose-500 disabled:opacity-35 disabled:hover:text-slate-400 cursor-pointer"

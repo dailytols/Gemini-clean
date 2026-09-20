@@ -36,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, openSettingsActi
 
           <button
             id="settings-toggle-btn"
+            type="button"
             onClick={onOpenSettings}
             className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 ${
               openSettingsActive

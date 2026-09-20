@@ -55,6 +55,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ images, onClea
       {/* Button controls */}
       <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
         <button
+          type="button"
           onClick={onClear}
           disabled={disabled}
           className="flex items-center gap-1.5 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50/20 text-slate-500 hover:text-rose-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -64,6 +65,7 @@ export const DownloadSection: React.FC<DownloadSectionProps> = ({ images, onClea
         </button>
 
         <button
+          type="button"
           onClick={handleDownloadAll}
           disabled={zipProgress !== null}
           className="flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] shadow-md shadow-violet-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"

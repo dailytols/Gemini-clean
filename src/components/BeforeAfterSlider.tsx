@@ -94,6 +94,7 @@ export const BeforeAfterSlider: React.FC<BeforeAfterSliderProps> = ({
           </div>
           <button
             id="close-compare-modal"
+            type="button"
             onClick={onClose}
             className="rounded-xl bg-white border border-slate-200 hover:border-violet-300 hover:bg-slate-50 p-2 text-slate-400 transition-colors cursor-pointer hover:text-slate-900"
             aria-label="Close Comparison"

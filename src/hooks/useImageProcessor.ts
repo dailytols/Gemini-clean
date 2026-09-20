@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { QueueImage } from '../types/image';
 import { AppSettings } from '../types/settings';
-import { processQueueItem } from '../services/imageProcessor';
+import { processQueueItemInWorker } from '../services/imageProcessorWorker';
 
 export function useImageProcessor(
   images: QueueImage[],
@@ -61,7 +61,7 @@ export function useImageProcessor(
       addLog(`Processing image ${i + 1} of ${images.length}: ${img.name}`);
 
       try {
-        await processQueueItem(img, settings, {
+        await processQueueItemInWorker(img, settings, {
           onUpdateImage: updateImage,
           onOverallProgress: () => {},
           onLog: addLog,

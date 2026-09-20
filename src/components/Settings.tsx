@@ -25,6 +25,7 @@ export const Settings: React.FC<SettingsProps> = ({
           <span>Image Core Settings</span>
         </span>
         <button
+          type="button"
           onClick={onClose}
           className="text-[10px] font-bold text-slate-400 uppercase tracking-wide hover:text-slate-950 cursor-pointer"
         >
@@ -59,6 +60,7 @@ export const Settings: React.FC<SettingsProps> = ({
             return (
               <button
                 key={m}
+                type="button"
                 onClick={() => updateField('inpaintingMethod', m)}
                 className={`rounded-lg py-1.5 text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                   isActive
@@ -84,6 +86,7 @@ export const Settings: React.FC<SettingsProps> = ({
             return (
               <button
                 key={f}
+                type="button"
                 onClick={() => updateField('outputFormat', f)}
                 className={`rounded-lg py-1.5 text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                   isActive
@@ -124,6 +127,7 @@ export const Settings: React.FC<SettingsProps> = ({
             return (
               <button
                 key={mode}
+                type="button"
                 onClick={() => updateField('processingMode', mode)}
                 className={`rounded-lg py-1.5 text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                   isActive
