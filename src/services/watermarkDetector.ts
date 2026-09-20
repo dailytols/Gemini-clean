@@ -42,6 +42,7 @@ export function drawGeminiLogoTemplate(width: number, height: number): HTMLCanva
 
 /**
  * Searches the corner regions of an image for a pixel signature matching the Gemini double-sparkle template
+ * Hyper-accelerated by downscaling the corner region to a maximum dimension of 250px.
  */
 export async function matchTemplate(
   imageElement: HTMLImageElement,
@@ -50,117 +51,129 @@ export async function matchTemplate(
   const w = imageElement.naturalWidth;
   const h = imageElement.naturalHeight;
 
-  const templateSizes = [32, 48, 64, 80];
   const padding = Math.max(16, Math.round(Math.min(w, h) * 0.02));
 
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.drawImage(imageElement, 0, 0);
-
-  const searchZones: { x: number; y: number; width: number; height: number; name: string }[] = [];
-
-  // Bottom-Right quadrant scan region
+  // Corner scan region (bottom-right 25%)
   const brW = Math.round(w * 0.25);
   const brH = Math.round(h * 0.25);
-  searchZones.push({
-    x: w - brW - padding,
-    y: h - brH - padding,
-    width: brW,
-    height: brH,
-    name: 'Bottom-Right',
-  });
+  const zoneX = w - brW - padding;
+  const zoneY = h - brH - padding;
 
-  for (const zone of searchZones) {
-    if (zone.x < 0 || zone.y < 0 || zone.width <= 0 || zone.height <= 0) continue;
+  if (zoneX < 0 || zoneY < 0 || brW <= 0 || brH <= 0) return null;
 
-    const imgData = ctx.getImageData(zone.x, zone.y, zone.width, zone.height);
-    const data = imgData.data;
+  // Downscale the search zone for hyper-fast template matching (max dimension 250px)
+  const maxDim = 250;
+  const scale = Math.min(1, maxDim / Math.max(brW, brH));
+  const scaledZoneW = Math.round(brW * scale);
+  const scaledZoneH = Math.round(brH * scale);
 
-    for (const size of templateSizes) {
-      if (size > zone.width || size > zone.height) continue;
+  const zoneCanvas = document.createElement('canvas');
+  zoneCanvas.width = scaledZoneW;
+  zoneCanvas.height = scaledZoneH;
+  const zCtx = zoneCanvas.getContext('2d');
+  if (!zCtx) return null;
 
-      const templateCanvas = drawGeminiLogoTemplate(size, size);
-      const tCtx = templateCanvas.getContext('2d');
-      if (!tCtx) continue;
-      const tData = tCtx.getImageData(0, 0, size, size);
-      const tBytes = tData.data;
+  // Draw ONLY the bottom-right region, downscaled
+  zCtx.drawImage(
+    imageElement,
+    zoneX, zoneY, brW, brH, // Source region
+    0, 0, scaledZoneW, scaledZoneH // Destination
+  );
 
-      const step = Math.max(1, Math.round(size / 8));
-      let bestScore = -1;
-      let bestX = 0;
-      let bestY = 0;
+  const imgData = zCtx.getImageData(0, 0, scaledZoneW, scaledZoneH);
+  const data = imgData.data;
 
-      for (let sy = 0; sy < zone.height - size; sy += step) {
-        for (let sx = 0; sx < zone.width - size; sx += step) {
-          
-          let sumDiff = 0;
-          let sumWeight = 0;
+  // Use smaller templates for the downscaled canvas
+  const templateSizes = [16, 24, 32, 40];
 
-          for (let ty = 0; ty < size; ty++) {
-            for (let tx = 0; tx < size; tx++) {
-              const tIdx = (ty * size + tx) * 4;
-              const tAlpha = tBytes[tIdx + 3];
+  for (const size of templateSizes) {
+    if (size > scaledZoneW || size > scaledZoneH) continue;
 
-              if (tAlpha > 50) {
-                const imgX = sx + tx;
-                const imgY = sy + ty;
-                const imgIdx = (imgY * zone.width + imgX) * 4;
+    const templateCanvas = drawGeminiLogoTemplate(size, size);
+    const tCtx = templateCanvas.getContext('2d');
+    if (!tCtx) continue;
+    const tData = tCtx.getImageData(0, 0, size, size);
+    const tBytes = tData.data;
 
-                const r = data[imgIdx];
-                const g = data[imgIdx + 1];
-                const b = data[imgIdx + 2];
-                const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    const step = 2; // Fixed small step is extremely fast on small canvas!
+    let bestScore = -1;
+    let bestX = 0;
+    let bestY = 0;
 
-                const diff = Math.abs(255 - luminance);
-                sumDiff += diff;
-                sumWeight += 255;
-              }
+    for (let sy = 0; sy < scaledZoneH - size; sy += step) {
+      for (let sx = 0; sx < scaledZoneW - size; sx += step) {
+        let sumDiff = 0;
+        let sumWeight = 0;
+
+        for (let ty = 0; ty < size; ty++) {
+          for (let tx = 0; tx < size; tx++) {
+            const tIdx = (ty * size + tx) * 4;
+            const tAlpha = tBytes[tIdx + 3];
+
+            if (tAlpha > 50) {
+              const imgX = sx + tx;
+              const imgY = sy + ty;
+              const imgIdx = (imgY * scaledZoneW + imgX) * 4;
+
+              const r = data[imgIdx];
+              const g = data[imgIdx + 1];
+              const b = data[imgIdx + 2];
+              const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+              const diff = Math.abs(255 - luminance);
+              sumDiff += diff;
+              sumWeight += 255;
             }
           }
-
-          const score = sumWeight > 0 ? 1 - sumDiff / sumWeight : 0;
-          if (score > bestScore) {
-            bestScore = score;
-            bestX = sx;
-            bestY = sy;
-          }
-        }
-      }
-
-      const confidence = bestScore;
-      if (confidence >= confidenceThreshold) {
-        const absoluteX = zone.x + bestX;
-        const absoluteY = zone.y + bestY;
-
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = w;
-        maskCanvas.height = h;
-        const mCtx = maskCanvas.getContext('2d');
-        if (mCtx) {
-          mCtx.fillStyle = 'rgba(0,0,0,0)';
-          mCtx.fillRect(0, 0, w, h);
-          mCtx.drawImage(templateCanvas, absoluteX, absoluteY);
         }
 
-        const maskImgData = mCtx ? mCtx.getImageData(0, 0, w, h) : null;
-
-        return {
-          detected: true,
-          confidence,
-          bbox: {
-            x: absoluteX,
-            y: absoluteY,
-            width: size,
-            height: size,
-          },
-          maskUrl: maskCanvas.toDataURL(),
-          maskData: maskImgData ? maskImgData.data : undefined,
-          detectorName: 'Template matching',
-        };
+        const score = sumWeight > 0 ? 1 - sumDiff / sumWeight : 0;
+        if (score > bestScore) {
+          bestScore = score;
+          bestX = sx;
+          bestY = sy;
+        }
       }
+    }
+
+    const confidence = bestScore;
+    if (confidence >= confidenceThreshold) {
+      // Scale coordinates back to original full-resolution scale
+      const originalBestX = Math.round(bestX / scale);
+      const originalBestY = Math.round(bestY / scale);
+      const originalSize = Math.round(size / scale);
+
+      const absoluteX = zoneX + originalBestX;
+      const absoluteY = zoneY + originalBestY;
+
+      // Draw original full-resolution template for the mask
+      const originalTemplateCanvas = drawGeminiLogoTemplate(originalSize, originalSize);
+
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = w;
+      maskCanvas.height = h;
+      const mCtx = maskCanvas.getContext('2d');
+      if (mCtx) {
+        mCtx.fillStyle = 'rgba(0,0,0,0)';
+        mCtx.fillRect(0, 0, w, h);
+        mCtx.drawImage(originalTemplateCanvas, absoluteX, absoluteY);
+      }
+
+      const maskImgData = mCtx ? mCtx.getImageData(0, 0, w, h) : null;
+
+      return {
+        detected: true,
+        confidence,
+        bbox: {
+          x: absoluteX,
+          y: absoluteY,
+          width: originalSize,
+          height: originalSize,
+        },
+        maskUrl: maskCanvas.toDataURL(),
+        maskData: maskImgData ? maskImgData.data : undefined,
+        detectorName: 'Template matching (Downscaled Acceleration)',
+      };
     }
   }
 
@@ -169,6 +182,7 @@ export async function matchTemplate(
 
 /**
  * Smart contour/segmentation-like detector for visible marks.
+ * Accelerated by downscaling the scanning region to prevent browser freeze.
  */
 export async function detectFallbackVisibleMark(
   imageElement: HTMLImageElement,
@@ -176,16 +190,6 @@ export async function detectFallbackVisibleMark(
 ): Promise<DetectionResult> {
   const w = imageElement.naturalWidth;
   const h = imageElement.naturalHeight;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return createEmergencyFallback(w, h);
-  }
-
-  ctx.drawImage(imageElement, 0, 0);
 
   const scanW = Math.round(w * 0.22);
   const scanH = Math.round(h * 0.15);
@@ -196,15 +200,35 @@ export async function detectFallbackVisibleMark(
     return createEmergencyFallback(w, h);
   }
 
-  const imgData = ctx.getImageData(scanX, scanY, scanW, scanH);
+  // Downscale the fallback scanning region for hyper-fast execution (max dimension 300px)
+  const maxDim = 300;
+  const scale = Math.min(1, maxDim / Math.max(scanW, scanH));
+  const scaledW = Math.round(scanW * scale);
+  const scaledH = Math.round(scanH * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = scaledW;
+  canvas.height = scaledH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return createEmergencyFallback(w, h);
+  }
+
+  ctx.drawImage(
+    imageElement,
+    scanX, scanY, scanW, scanH,
+    0, 0, scaledW, scaledH
+  );
+
+  const imgData = ctx.getImageData(0, 0, scaledW, scaledH);
   const data = imgData.data;
 
   const threshold = 180;
   const maskPoints: { x: number; y: number }[] = [];
 
-  for (let y = 0; y < scanH; y++) {
-    for (let x = 0; x < scanW; x++) {
-      const idx = (y * scanW + x) * 4;
+  for (let y = 0; y < scaledH; y++) {
+    for (let x = 0; x < scaledW; x++) {
+      const idx = (y * scaledW + x) * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
@@ -223,10 +247,10 @@ export async function detectFallbackVisibleMark(
     }
   }
 
-  if (maskPoints.length > 20 && maskPoints.length < (scanW * scanH * 0.6)) {
-    let minX = scanW;
+  if (maskPoints.length > 20 && maskPoints.length < (scaledW * scaledH * 0.6)) {
+    let minX = scaledW;
     let maxX = 0;
-    let minY = scanH;
+    let minY = scaledH;
     let maxY = 0;
 
     for (const pt of maskPoints) {
@@ -239,9 +263,11 @@ export async function detectFallbackVisibleMark(
     const bboxWidth = maxX - minX + 1;
     const bboxHeight = maxY - minY + 1;
 
-    if (bboxWidth > 15 && bboxHeight > 8 && bboxWidth < scanW * 0.95 && bboxHeight < scanH * 0.95) {
-      const absX = scanX + minX;
-      const absY = scanY + minY;
+    if (bboxWidth > 8 && bboxHeight > 4) {
+      const absX = scanX + Math.round(minX / scale);
+      const absY = scanY + Math.round(minY / scale);
+      const originalBboxW = Math.round(bboxWidth / scale);
+      const originalBboxH = Math.round(bboxHeight / scale);
 
       const maskCanvas = document.createElement('canvas');
       maskCanvas.width = w;
@@ -252,9 +278,14 @@ export async function detectFallbackVisibleMark(
         mCtx.fillRect(0, 0, w, h);
         mCtx.fillStyle = 'rgba(255, 0, 0, 1)';
         
+        // Draw the full-res mask matching the downscaled pixel clusters
         for (const pt of maskPoints) {
           if (pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY) {
-            mCtx.fillRect(scanX + pt.x, scanY + pt.y, 1, 1);
+            const origX = scanX + Math.round(pt.x / scale);
+            const origY = scanY + Math.round(pt.y / scale);
+            const origW = Math.ceil(1 / scale);
+            const origH = Math.ceil(1 / scale);
+            mCtx.fillRect(origX, origY, origW, origH);
           }
         }
       }
@@ -267,12 +298,12 @@ export async function detectFallbackVisibleMark(
         bbox: {
           x: absX,
           y: absY,
-          width: bboxWidth,
-          height: bboxHeight,
+          width: originalBboxW,
+          height: originalBboxH,
         },
         maskUrl: maskCanvas.toDataURL(),
         maskData: maskImgData ? maskImgData.data : undefined,
-        detectorName: 'OpenCV Fallback',
+        detectorName: 'OpenCV Fallback (Downscaled Acceleration)',
       };
     }
   }
