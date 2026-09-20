@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/* Premium Light Theme Gradients & Animations */
+.gradient-text {
+  background: linear-gradient(
+    90deg,
+    #7c3aed,
+    #2563eb,
+    #ec4899,
+    #f97316
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.background-orb {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.14;
+  pointer-events: none;
+  animation: floatOrb 14s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrb {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(35px, -45px) scale(1.1);
+  }
+}
+
+.workspace {
+  position: relative;
+  border: 1px solid #f1f5f9;
+  border-radius: 24px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.08);
+}
+
+.workspace::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    #7c3aed,
+    #2563eb,
+    #ec4899,
+    #f97316,
+    #7c3aed
+  );
+  z-index: 0;
+  animation: borderSpin 20s linear infinite;
+  opacity: 0.25;
+}
+
+@keyframes borderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Accessibility overrides for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .background-orb,
+  .workspace::before {
+    animation: none !important;
+  }
+  .animate-spin,
+  .animate-pulse {
+    animation: none !important;
+  }
+}
+
+/* Custom scrollbar styling for queues */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}

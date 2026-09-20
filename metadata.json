@@ -1,0 +1,6 @@
+{
+  "name": "Gemini Clean",
+  "description": "Fast browser-side image cleaning with automatic detection, visual comparison and bulk export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
